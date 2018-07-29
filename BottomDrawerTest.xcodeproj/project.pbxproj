@@ -16,6 +16,8 @@
 		1F65A6B6210D004800717AC8 /* BottomDrawerPresentingAnimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65A6B5210D004800717AC8 /* BottomDrawerPresentingAnimator.swift */; };
 		1F65A6B8210D059E00717AC8 /* BottomDrawerDismissingAnimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65A6B7210D059E00717AC8 /* BottomDrawerDismissingAnimator.swift */; };
 		1F65A6BA210DEA7F00717AC8 /* BottomDrawerPresentationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65A6B9210DEA7F00717AC8 /* BottomDrawerPresentationController.swift */; };
+		1F65A6BC210E260700717AC8 /* BottomDrawer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65A6BB210E260700717AC8 /* BottomDrawer.swift */; };
+		1F65A6BE210E265700717AC8 /* ContentsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F65A6BD210E265700717AC8 /* ContentsViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +32,8 @@
 		1F65A6B5210D004800717AC8 /* BottomDrawerPresentingAnimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomDrawerPresentingAnimator.swift; sourceTree = "<group>"; };
 		1F65A6B7210D059E00717AC8 /* BottomDrawerDismissingAnimator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomDrawerDismissingAnimator.swift; sourceTree = "<group>"; };
 		1F65A6B9210DEA7F00717AC8 /* BottomDrawerPresentationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomDrawerPresentationController.swift; sourceTree = "<group>"; };
+		1F65A6BB210E260700717AC8 /* BottomDrawer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomDrawer.swift; sourceTree = "<group>"; };
+		1F65A6BD210E265700717AC8 /* ContentsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentsViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,6 +68,8 @@
 			children = (
 				1F65A6A1210CFE1D00717AC8 /* AppDelegate.swift */,
 				1F65A6A3210CFE1D00717AC8 /* ViewController.swift */,
+				1F65A6BD210E265700717AC8 /* ContentsViewController.swift */,
+				1F65A6BB210E260700717AC8 /* BottomDrawer.swift */,
 				1F65A6B3210CFE3300717AC8 /* BottomDrawerViewController.swift */,
 				1F65A6B5210D004800717AC8 /* BottomDrawerPresentingAnimator.swift */,
 				1F65A6B7210D059E00717AC8 /* BottomDrawerDismissingAnimator.swift */,
@@ -147,11 +153,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F65A6BE210E265700717AC8 /* ContentsViewController.swift in Sources */,
 				1F65A6A4210CFE1D00717AC8 /* ViewController.swift in Sources */,
 				1F65A6BA210DEA7F00717AC8 /* BottomDrawerPresentationController.swift in Sources */,
 				1F65A6A2210CFE1D00717AC8 /* AppDelegate.swift in Sources */,
 				1F65A6B4210CFE3300717AC8 /* BottomDrawerViewController.swift in Sources */,
 				1F65A6B8210D059E00717AC8 /* BottomDrawerDismissingAnimator.swift in Sources */,
+				1F65A6BC210E260700717AC8 /* BottomDrawer.swift in Sources */,
 				1F65A6B6210D004800717AC8 /* BottomDrawerPresentingAnimator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

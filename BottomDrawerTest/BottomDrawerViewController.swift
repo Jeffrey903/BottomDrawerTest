@@ -10,16 +10,27 @@ import UIKit
 
 class BottomDrawerViewController: UIViewController, UIViewControllerTransitioningDelegate {
 
+    let child: UIViewController & BottomDrawer
+
     let panGestureRecognizer = UIPanGestureRecognizer()
     var interactionController: UIPercentDrivenInteractiveTransition?
 
     let tapGestureRecognizer = UITapGestureRecognizer()
 
+    var cornerRadius: CGFloat = 0 {
+        didSet {
+            view.layer.cornerRadius = cornerRadius
+            child.view.layer.cornerRadius = cornerRadius
+        }
+    }
+
     var leadingConstraint: NSLayoutConstraint?
     var trailingConstraint: NSLayoutConstraint?
     var bottomConstraint: NSLayoutConstraint?
 
-    init() {
+    init(withChild child: UIViewController & BottomDrawer) {
+        self.child = child
+
         super.init(nibName: nil, bundle: nil)
 
         panGestureRecognizer.addTarget(self, action: #selector(handlePan(_:)))
@@ -35,28 +46,23 @@ class BottomDrawerViewController: UIViewController, UIViewControllerTransitionin
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        view.backgroundColor = .yellow
-
-        view.layer.cornerRadius = 10
+        cornerRadius = 10
         view.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+        child.view.layer.maskedCorners = view.layer.maskedCorners
 
-        let label = UILabel()
-        label.font = UIFont.preferredFont(forTextStyle: .caption1)
-        label.text = [
-            "Tap on dimming view or swipe down on drawer to close.",
-            "Tapping on bottom drawer to close is intentionally not implemented.",
-        ].joined(separator: "\n\n")
-        label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(label)
-        
+        addChild(child)
+        view.addSubview(child.view)
+        child.view.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            label.leadingAnchor.constraint(greaterThanOrEqualToSystemSpacingAfter: view.leadingAnchor, multiplier: 2),
-            view.trailingAnchor.constraint(greaterThanOrEqualToSystemSpacingAfter: label.trailingAnchor, multiplier: 2),
-            label.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            label.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+            child.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            child.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            child.view.topAnchor.constraint(equalTo: view.topAnchor),
+            child.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
+        child.didMove(toParent: self)
 
-            view.heightAnchor.constraint(equalToConstant: 600),
+        NSLayoutConstraint.activate([
+            view.heightAnchor.constraint(equalToConstant: child.expandedHeight()),
         ])
 
         view.addGestureRecognizer(panGestureRecognizer)
@@ -72,7 +78,7 @@ class BottomDrawerViewController: UIViewController, UIViewControllerTransitionin
         NSLayoutConstraint.activate([
             self.view.leadingAnchor.constraint(equalTo: parent.view.safeAreaLayoutGuide.leadingAnchor, constant: 8),
             parent.view.safeAreaLayoutGuide.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: 8),
-            self.view.topAnchor.constraint(equalTo: parent.view.bottomAnchor, constant: -200),
+            self.view.topAnchor.constraint(equalTo: parent.view.bottomAnchor, constant: -child.collapsedHeight()),
         ])
         self.didMove(toParent: parent)
     }
@@ -97,7 +103,7 @@ class BottomDrawerViewController: UIViewController, UIViewControllerTransitionin
 
         let translation = gestureRecognizer.translation(in: gestureRecognizer.view)
         let sign: CGFloat = isBeingDismissed ? 1 : -1
-        let pct = max(0, min(1, sign * translation.y / (view.bounds.height - 200)))
+        let pct = max(0, min(1, sign * translation.y / (view.bounds.height - child.collapsedHeight())))
 
         switch gestureRecognizer.state {
         case .changed:

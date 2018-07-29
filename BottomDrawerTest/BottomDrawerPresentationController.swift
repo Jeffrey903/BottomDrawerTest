@@ -48,7 +48,10 @@ class BottomDrawerPresentationController: UIPresentationController {
         dimmingView.backgroundColor = .clear
         presentingViewController.transitionCoordinator?.animate(alongsideTransition: { [weak self] context in
             self?.dimmingView.backgroundColor = UIColor.black.withAlphaComponent(0.15)
-            self?.presentedView?.layer.cornerRadius = 0
+
+            if let bottomDrawer = self?.presentedViewController as? BottomDrawerViewController {
+                bottomDrawer.cornerRadius = 0
+            }
         })
     }
 
@@ -61,7 +64,10 @@ class BottomDrawerPresentationController: UIPresentationController {
     override func dismissalTransitionWillBegin() {
         presentingViewController.transitionCoordinator?.animate(alongsideTransition: { [weak self] context in
             self?.dimmingView.backgroundColor = .clear
-            self?.presentedView?.layer.cornerRadius = 10
+
+            if let bottomDrawer = self?.presentedViewController as? BottomDrawerViewController {
+                bottomDrawer.cornerRadius = 10
+            }
         })
     }
 

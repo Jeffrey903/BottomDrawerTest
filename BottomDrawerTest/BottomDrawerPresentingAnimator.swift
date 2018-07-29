@@ -22,15 +22,15 @@ class BottomDrawerPresentingAnimator: NSObject, UIViewControllerAnimatedTransiti
         toView.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(toView)
 
+        let bottomDrawer = toViewController as! BottomDrawerViewController
+
         let leadingConstraint = toView.leadingAnchor.constraint(equalTo: containerView.safeAreaLayoutGuide.leadingAnchor, constant: 8)
         let trailingConstraint = containerView.safeAreaLayoutGuide.trailingAnchor.constraint(equalTo: toView.trailingAnchor, constant: 8)
-        let bottomConstraint = toView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: 400)
+        let bottomConstraint = toView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: bottomDrawer.child.expandedHeight() - bottomDrawer.child.collapsedHeight())
 
-        if let bottomDrawer = toViewController as? BottomDrawerViewController {
-            bottomDrawer.leadingConstraint = leadingConstraint
-            bottomDrawer.trailingConstraint = trailingConstraint
-            bottomDrawer.bottomConstraint = bottomConstraint
-        }
+        bottomDrawer.leadingConstraint = leadingConstraint
+        bottomDrawer.trailingConstraint = trailingConstraint
+        bottomDrawer.bottomConstraint = bottomConstraint
 
         NSLayoutConstraint.activate([
             leadingConstraint,
@@ -50,7 +50,7 @@ class BottomDrawerPresentingAnimator: NSObject, UIViewControllerAnimatedTransiti
             if transitionContext.transitionWasCancelled {
                 leadingConstraint.constant = 8
                 trailingConstraint.constant = 8
-                bottomConstraint.constant = 400
+                bottomConstraint.constant = bottomDrawer.child.expandedHeight() - bottomDrawer.child.collapsedHeight()
             }
 
             transitionContext.completeTransition(!transitionContext.transitionWasCancelled)

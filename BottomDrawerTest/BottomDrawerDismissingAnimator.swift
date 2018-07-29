@@ -17,18 +17,18 @@ class BottomDrawerDismissingAnimator: NSObject, UIViewControllerAnimatedTransiti
     func animateTransition(using transitionContext: UIViewControllerContextTransitioning) {
         let containerView = transitionContext.containerView
 
-        let bottomDrawer = transitionContext.viewController(forKey: .from) as? BottomDrawerViewController
-        bottomDrawer?.leadingConstraint?.constant = 8
-        bottomDrawer?.trailingConstraint?.constant = 8
-        bottomDrawer?.bottomConstraint?.constant = 400
+        let bottomDrawer = transitionContext.viewController(forKey: .from) as! BottomDrawerViewController
+        bottomDrawer.leadingConstraint?.constant = 8
+        bottomDrawer.trailingConstraint?.constant = 8
+        bottomDrawer.bottomConstraint?.constant = bottomDrawer.child.expandedHeight() - bottomDrawer.child.collapsedHeight()
 
         UIView.animate(withDuration: transitionDuration(using: transitionContext), delay: 0, options: .curveEaseInOut, animations: {
             containerView.layoutIfNeeded()
         }) { _ in
             if transitionContext.transitionWasCancelled {
-                bottomDrawer?.leadingConstraint?.constant = 0
-                bottomDrawer?.trailingConstraint?.constant = 0
-                bottomDrawer?.bottomConstraint?.constant = 0
+                bottomDrawer.leadingConstraint?.constant = 0
+                bottomDrawer.trailingConstraint?.constant = 0
+                bottomDrawer.bottomConstraint?.constant = 0
             }
 
             transitionContext.completeTransition(!transitionContext.transitionWasCancelled)
