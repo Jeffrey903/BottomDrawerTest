@@ -10,8 +10,8 @@ import UIKit
 
 protocol BottomDrawer {
 
-    func expandedHeight() -> CGFloat
+    var heightForDefaultVisibility: CGFloat { get }
 
-    func collapsedHeight() -> CGFloat
+    var bottomLayoutAnchorForDefaultVisibility: NSLayoutAnchor<NSLayoutYAxisAnchor> { get }
 
 }

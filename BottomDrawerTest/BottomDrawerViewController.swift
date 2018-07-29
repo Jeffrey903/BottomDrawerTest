@@ -10,6 +10,7 @@ import UIKit
 
 class BottomDrawerViewController: UIViewController, UIViewControllerTransitioningDelegate {
 
+    weak var presenting: UIViewController?
     let child: UIViewController & BottomDrawer
 
     let panGestureRecognizer = UIPanGestureRecognizer()
@@ -28,10 +29,13 @@ class BottomDrawerViewController: UIViewController, UIViewControllerTransitionin
     var trailingConstraint: NSLayoutConstraint?
     var bottomConstraint: NSLayoutConstraint?
 
-    init(withChild child: UIViewController & BottomDrawer) {
+    init(withPresenting presenting: UIViewController, child: UIViewController & BottomDrawer) {
+        self.presenting = presenting
         self.child = child
 
         super.init(nibName: nil, bundle: nil)
+
+        setupViewControllerContainment()
 
         panGestureRecognizer.addTarget(self, action: #selector(handlePan(_:)))
 
@@ -61,26 +65,46 @@ class BottomDrawerViewController: UIViewController, UIViewControllerTransitionin
         ])
         child.didMove(toParent: self)
 
-        NSLayoutConstraint.activate([
-            view.heightAnchor.constraint(equalToConstant: child.expandedHeight()),
-        ])
-
         view.addGestureRecognizer(panGestureRecognizer)
 
         tapGestureRecognizer.addTarget(self, action: #selector(handleTap(_:)))
         view.addGestureRecognizer(tapGestureRecognizer)
     }
 
-    func addToParent(_ parent: UIViewController) {
-        parent.addChild(self)
-        parent.view.addSubview(self.view)
-        self.view.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            self.view.leadingAnchor.constraint(equalTo: parent.view.safeAreaLayoutGuide.leadingAnchor, constant: 8),
-            parent.view.safeAreaLayoutGuide.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: 8),
-            self.view.topAnchor.constraint(equalTo: parent.view.bottomAnchor, constant: -child.collapsedHeight()),
-        ])
-        self.didMove(toParent: parent)
+    func setupViewControllerContainment() {
+        guard let presenting = presenting else {
+            return
+        }
+
+        self.leadingConstraint?.isActive = false
+        self.trailingConstraint?.isActive = false
+        self.bottomConstraint?.isActive = false
+
+        presenting.addChild(self)
+        presenting.view.addSubview(view)
+        view.translatesAutoresizingMaskIntoConstraints = false
+
+        let leadingConstraint = view.leadingAnchor.constraint(equalTo: presenting.view.safeAreaLayoutGuide.leadingAnchor, constant: 8)
+        let trailingConstraint = presenting.view.safeAreaLayoutGuide.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 8)
+        let bottomConstraint = child.bottomLayoutAnchorForDefaultVisibility.constraint(equalTo: presenting.view.bottomAnchor)
+
+        NSLayoutConstraint.activate([leadingConstraint, trailingConstraint, bottomConstraint])
+
+        self.leadingConstraint = leadingConstraint
+        self.trailingConstraint = trailingConstraint
+        self.bottomConstraint = bottomConstraint
+
+        self.didMove(toParent: presenting)
+    }
+
+    func removeViewControllerContainment() {
+        willMove(toParent: nil)
+        view.removeFromSuperview()
+        removeFromParent()
+
+        leadingConstraint = nil
+        trailingConstraint = nil
+        bottomConstraint = nil
     }
 
     @objc func handleTap(_ gestureRecognizer: UITapGestureRecognizer) {
@@ -103,7 +127,7 @@ class BottomDrawerViewController: UIViewController, UIViewControllerTransitionin
 
         let translation = gestureRecognizer.translation(in: gestureRecognizer.view)
         let sign: CGFloat = isBeingDismissed ? 1 : -1
-        let pct = max(0, min(1, sign * translation.y / (view.bounds.height - child.collapsedHeight())))
+        let pct = max(0, min(1, sign * translation.y / (view.bounds.height - child.heightForDefaultVisibility)))
 
         switch gestureRecognizer.state {
         case .changed:
@@ -147,9 +171,7 @@ class BottomDrawerViewController: UIViewController, UIViewControllerTransitionin
         }
 
         // Remove VC
-        willMove(toParent: nil)
-        view.removeFromSuperview()
-        removeFromParent()
+        removeViewControllerContainment()
 
         if isInteractive {
             self.interactionController = UIPercentDrivenInteractiveTransition()
@@ -166,7 +188,7 @@ class BottomDrawerViewController: UIViewController, UIViewControllerTransitionin
                     return
                 }
 
-                self.addToParent(parent)
+                self.setupViewControllerContainment()
             }
 
             DispatchQueue.main.async {
@@ -196,7 +218,7 @@ class BottomDrawerViewController: UIViewController, UIViewControllerTransitionin
                 return
             }
 
-            self.addToParent(presenting)
+            self.setupViewControllerContainment()
         }
     }
 
