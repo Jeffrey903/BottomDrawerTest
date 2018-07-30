@@ -64,6 +64,11 @@ class BottomDrawerViewController: UIViewController, UIViewControllerTransitionin
         view.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
         child.view.layer.maskedCorners = view.layer.maskedCorners
 
+        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowOpacity = 0.4
+        view.layer.shadowRadius = 8
+        view.layer.shadowOffset = CGSize(width: 0, height: 2)
+
         addChild(child)
         view.addSubview(child.view)
         child.view.translatesAutoresizingMaskIntoConstraints = false
