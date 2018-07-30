@@ -10,6 +10,12 @@ import UIKit
 
 class BottomDrawerPresentingAnimator: NSObject, UIViewControllerAnimatedTransitioning {
 
+    let oldVisibility: BottomDrawerViewController.Visibility
+
+    init(oldVisibility: BottomDrawerViewController.Visibility) {
+        self.oldVisibility = oldVisibility
+    }
+
     func transitionDuration(using transitionContext: UIViewControllerContextTransitioning?) -> TimeInterval {
         return 0.3
     }
@@ -24,25 +30,25 @@ class BottomDrawerPresentingAnimator: NSObject, UIViewControllerAnimatedTransiti
         let leadingConstraint = bottomDrawer.view.leadingAnchor.constraint(equalTo: containerView.safeAreaLayoutGuide.leadingAnchor, constant: 8)
         let trailingConstraint = containerView.safeAreaLayoutGuide.trailingAnchor.constraint(equalTo: bottomDrawer.view.trailingAnchor, constant: 8)
 
-        let defaultBottomConstraint = bottomDrawer.child.bottomLayoutAnchorForDefaultVisibility.constraint(equalTo: containerView.bottomAnchor)
-        let expandedBottomConstraint = bottomDrawer.view.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
+        let oldBottomConstraint = bottomDrawer.bottomConstraint(forVisibility: oldVisibility, containerView: containerView)
+        let newBottomConstraint = bottomDrawer.bottomConstraint(forVisibility: .expanded, containerView: containerView)
 
         bottomDrawer.leadingConstraint = leadingConstraint
         bottomDrawer.trailingConstraint = trailingConstraint
-        bottomDrawer.bottomConstraint = expandedBottomConstraint
+        bottomDrawer.bottomConstraint = newBottomConstraint
 
         NSLayoutConstraint.activate([
             leadingConstraint,
             trailingConstraint,
-            defaultBottomConstraint,
+            oldBottomConstraint,
         ])
 
         containerView.layoutIfNeeded()
 
         leadingConstraint.constant = 0
         trailingConstraint.constant = 0
-        defaultBottomConstraint.isActive = false
-        expandedBottomConstraint.isActive = true
+        oldBottomConstraint.isActive = false
+        newBottomConstraint.isActive = true
 
         UIView.animate(withDuration: transitionDuration(using: transitionContext), delay: 0, options: .curveEaseInOut, animations: {
             containerView.layoutIfNeeded()
@@ -50,9 +56,9 @@ class BottomDrawerPresentingAnimator: NSObject, UIViewControllerAnimatedTransiti
             if transitionContext.transitionWasCancelled {
                 leadingConstraint.constant = 8
                 trailingConstraint.constant = 8
-                bottomDrawer.bottomConstraint = defaultBottomConstraint
-                expandedBottomConstraint.isActive = false
-                defaultBottomConstraint.isActive = true
+                bottomDrawer.bottomConstraint = oldBottomConstraint
+                newBottomConstraint.isActive = false
+                oldBottomConstraint.isActive = true
             }
 
             transitionContext.completeTransition(!transitionContext.transitionWasCancelled)

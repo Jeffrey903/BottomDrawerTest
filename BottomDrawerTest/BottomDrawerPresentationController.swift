@@ -26,7 +26,7 @@ class BottomDrawerPresentationController: UIPresentationController {
         }
 
         if let bottomDrawer = presentedViewController as? BottomDrawerViewController {
-            bottomDrawer.collapse(isInteractive: false)
+            bottomDrawer.setVisibility(.default, animated: true)
         }
     }
 

@@ -10,10 +10,19 @@ import UIKit
 
 class BottomDrawerViewController: UIViewController, UIViewControllerTransitioningDelegate {
 
+    enum Visibility {
+        case `default`
+        case expanded
+        case minimized
+    }
+
     weak var presenting: UIViewController?
     let child: UIViewController & BottomDrawer
 
+    private(set) var visibility: Visibility
+
     let panGestureRecognizer = UIPanGestureRecognizer()
+    var presentingAnimator: BottomDrawerPresentingAnimator?
     var interactionController: UIPercentDrivenInteractiveTransition?
 
     let tapGestureRecognizer = UITapGestureRecognizer()
@@ -32,6 +41,7 @@ class BottomDrawerViewController: UIViewController, UIViewControllerTransitionin
     init(withPresenting presenting: UIViewController, child: UIViewController & BottomDrawer) {
         self.presenting = presenting
         self.child = child
+        self.visibility = .default
 
         super.init(nibName: nil, bundle: nil)
 
@@ -71,7 +81,54 @@ class BottomDrawerViewController: UIViewController, UIViewControllerTransitionin
         view.addGestureRecognizer(tapGestureRecognizer)
     }
 
-    func setupViewControllerContainment() {
+    func setVisibility(_ visibility: Visibility, animated: Bool) {
+        setVisibility(visibility, animated: animated, isInteractive: false)
+    }
+
+    private func setVisibility(_ visibility: Visibility, animated: Bool, isInteractive: Bool) {
+        let oldVisibility = self.visibility
+        guard oldVisibility != visibility else {
+            return
+        }
+
+        self.visibility = visibility
+
+        switch (oldVisibility, visibility) {
+        case (_, .expanded):
+            expand(animated: animated, isInteractive: isInteractive, oldVisibility: oldVisibility)
+        case (.expanded, _):
+            collapse(animated: animated, isInteractive: isInteractive)
+        default:
+            guard let presenting = presenting else {
+                return
+            }
+
+            self.bottomConstraint?.isActive = false
+
+            let newBottomConstraint = bottomConstraint(forVisibility: visibility, containerView: presenting.view)
+            newBottomConstraint.isActive = true
+            self.bottomConstraint = newBottomConstraint
+
+            if animated {
+                UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseInOut, animations: {
+                    presenting.view.layoutIfNeeded()
+                })
+            }
+        }
+    }
+
+    func bottomConstraint(forVisibility visibility: Visibility, containerView: UIView) -> NSLayoutConstraint {
+        switch visibility {
+        case .default:
+            return child.bottomLayoutAnchorForDefaultVisibility.constraint(equalTo: containerView.bottomAnchor)
+        case .minimized:
+            return view.topAnchor.constraint(equalTo: containerView.bottomAnchor)
+        case .expanded:
+            return view.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
+        }
+    }
+
+    private func setupViewControllerContainment() {
         guard let presenting = presenting else {
             return
         }
@@ -86,7 +143,7 @@ class BottomDrawerViewController: UIViewController, UIViewControllerTransitionin
 
         let leadingConstraint = view.leadingAnchor.constraint(equalTo: presenting.view.safeAreaLayoutGuide.leadingAnchor, constant: 8)
         let trailingConstraint = presenting.view.safeAreaLayoutGuide.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 8)
-        let bottomConstraint = child.bottomLayoutAnchorForDefaultVisibility.constraint(equalTo: presenting.view.bottomAnchor)
+        let bottomConstraint = self.bottomConstraint(forVisibility: visibility, containerView: presenting.view)
 
         NSLayoutConstraint.activate([leadingConstraint, trailingConstraint, bottomConstraint])
 
@@ -108,19 +165,19 @@ class BottomDrawerViewController: UIViewController, UIViewControllerTransitionin
     }
 
     @objc func handleTap(_ gestureRecognizer: UITapGestureRecognizer) {
-        guard gestureRecognizer.state == .ended, presentingViewController == nil else {
+        guard gestureRecognizer.state == .ended else {
             return
         }
 
-        expand(isInteractive: false)
+        setVisibility(.expanded, animated: true, isInteractive: false)
     }
 
     @objc func handlePan(_ gestureRecognizer: UIPanGestureRecognizer) {
         guard gestureRecognizer.state != .began else {
-            if self.presentingViewController != nil {
-                collapse(isInteractive: true)
+            if self.visibility == .expanded {
+                self.setVisibility(.default, animated: true, isInteractive: true)
             } else {
-                expand(isInteractive: true)
+                self.setVisibility(.expanded, animated: true, isInteractive: true)
             }
             return
         }
@@ -152,7 +209,7 @@ class BottomDrawerViewController: UIViewController, UIViewControllerTransitionin
         }
     }
 
-    func expand(isInteractive: Bool) {
+    private func expand(animated: Bool, isInteractive: Bool, oldVisibility: Visibility) {
         guard let parent = parent else {
             return
         }
@@ -173,6 +230,8 @@ class BottomDrawerViewController: UIViewController, UIViewControllerTransitionin
         // Remove VC
         removeViewControllerContainment()
 
+        self.presentingAnimator = BottomDrawerPresentingAnimator(oldVisibility: oldVisibility)
+
         if isInteractive {
             self.interactionController = UIPercentDrivenInteractiveTransition()
         }
@@ -182,12 +241,13 @@ class BottomDrawerViewController: UIViewController, UIViewControllerTransitionin
         // Using a snapshot view fixes the flicker.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
             // Present VC
-            parent.present(self, animated: true) {
+            parent.present(self, animated: animated) {
                 // If presentation is cancelled, re-add VC to parent
                 guard self.parent == nil && self.presentingViewController == nil else {
                     return
                 }
 
+                self.visibility = .default
                 self.setupViewControllerContainment()
             }
 
@@ -203,7 +263,7 @@ class BottomDrawerViewController: UIViewController, UIViewControllerTransitionin
         }
     }
 
-    func collapse(isInteractive: Bool) {
+    private func collapse(animated: Bool, isInteractive: Bool) {
         guard let presenting = self.presentingViewController else {
             return
         }
@@ -212,9 +272,10 @@ class BottomDrawerViewController: UIViewController, UIViewControllerTransitionin
             interactionController = UIPercentDrivenInteractiveTransition()
         }
 
-        presenting.dismiss(animated: true) {
+        presenting.dismiss(animated: animated) {
             // If dismissal is successful, re-add VC to parent
             guard self.parent == nil && self.presentingViewController == nil else {
+                self.visibility = .expanded
                 return
             }
 
@@ -225,11 +286,11 @@ class BottomDrawerViewController: UIViewController, UIViewControllerTransitionin
     // MARK: - UIViewControllerTransitioningDelegate
     
     func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
-        return BottomDrawerPresentingAnimator()
+        return self.presentingAnimator
     }
 
     func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
-        return BottomDrawerDismissingAnimator()
+        return BottomDrawerDismissingAnimator(newVisibility: visibility)
     }
 
     func interactionControllerForPresentation(using animator: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
